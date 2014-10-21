@@ -1,6 +1,6 @@
 
 function intRandom(begin, end) {
-    return Math.floor((Math.random() * (end - begin))) + begin;
+    return Math.ceil((Math.random() * (end - begin))) + begin;
 }
 
 function FlakeScene(flakes, flakeElementTemplate, xTongueOff, yTongueOff, tongueWidth, tongueHeight, xFlakeOff, yFlakeOff) {
@@ -98,16 +98,56 @@ function Face(body, face, face1, face2, xOff, yOff) {
     body.addEventListener("mousemove", onMouseMove);
 }
 
+function Time(timeElement) {
+
+    var begin = new Date().getTime() / 1000;
+
+    function tick() {
+        var interval = new Date().getTime() / 1000 - begin;
+        var text = "Вы убили ";
+        var hours = Math.floor(interval / 60 / 60);
+        var minutes = Math.floor(interval / 60) - 60 * hours;
+        var seconds = Math.floor(interval) - 60 * minutes;
+        if(hours > 0) {
+            text += hours;
+            if(hours % 10 == 0 || hours > 10 && hours < 20)
+                text += " часов ";
+            else if(hours % 10 == 1) text += " час ";
+            else if(hours % 10 < 5) text += " часа";
+            else text += " часов ";
+        }
+        if(minutes > 0) {
+            text += minutes;
+            if(minutes % 10 == 0 || minutes > 10 && minutes < 20)
+                text += " минут ";
+            else if(minutes % 10 == 1) text += " минуту ";
+            else if(minutes % 10 < 5) text += " минуты ";
+            else text += " минут ";
+        }
+        text += seconds;
+        if(seconds % 10 == 0 || seconds > 10 && seconds < 20)
+            text += " секунд";
+        else if(seconds % 10 == 1) text += " секундy ";
+        else if(seconds % 10 < 5) text += " секунды ";
+        else text += " секунд ";
+        timeElement.textContent = text;
+    }
+
+    setInterval(tick, 1000);
+}
+
 function onLoad() {
     var face = document.getElementById("face");
     var face1 = document.getElementById("face1");
     var face2 = document.getElementById("face2");
-    Face(document.body, face, face1, face2, 114, 120);
+    Face(document.body, face, face1, face2, 104, 128);
     var flakeTemplate = document.getElementById("flake-template");
     var flakes = document.getElementById("flakes");
-    FlakeScene(flakes, flakeTemplate, 40, 40, 50, 30, 32, 32);
+    FlakeScene(flakes, flakeTemplate, 30, 35, 50, 30, 32, 32);
     document.body.addEventListener("dragstart", function(e) { e.preventDefault(); });
     document.body.addEventListener("dblclick", function(e) { e.preventDefault(); });
+    var time = document.getElementById("time");
+    Time(time);
 }
 
 window.addEventListener("load", onLoad);

@@ -37,3 +37,11 @@ body {
     left: 0px;
     top: 0px
 }
+
+#time {
+    display: block;
+    position: fixed;
+    bottom: 0px;
+    color: #0f0;
+    font: normal 25px Arial, sans-serif
+}
