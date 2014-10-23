@@ -42,6 +42,12 @@ body {
     display: block;
     position: fixed;
     bottom: 0px;
-    color: #0f0;
-    font: normal 25px Arial, sans-serif
+    color: green;
+    font: italic 25px Verdana, sans-serif
+}
+
+#score {
+    display: block;
+    position: absolute;
+    font: normal 35px Tahoma, sans-serif
 }

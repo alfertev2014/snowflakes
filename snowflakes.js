@@ -3,7 +3,9 @@ function intRandom(begin, end) {
     return Math.ceil((Math.random() * (end - begin))) + begin;
 }
 
-function FlakeScene(flakes, flakeElementTemplate, xTongueOff, yTongueOff, tongueWidth, tongueHeight, xFlakeOff, yFlakeOff) {
+function FlakeScene(flakes, flakeElementTemplate, scoreElement, xTongueOff, yTongueOff, tongueWidth, tongueHeight, xFlakeOff, yFlakeOff, xScoreOff, yScoreOff) {
+
+    var score = 0;
 
     function addFlake(x, y) {
         var newFlake = flakeElementTemplate.cloneNode(true);
@@ -37,12 +39,50 @@ function FlakeScene(flakes, flakeElementTemplate, xTongueOff, yTongueOff, tongue
         flake.style.top = newTop + "px";
     }
     
+    function scoreColor(value) {
+        if(value >= 1000) {
+            return "#f0f";
+        } else if(value >= 500) {
+            return "#d81";
+        } else if(value >= 300) {
+            return "#a6f";
+        } else if(value >= 200) {
+            return "#b28";
+        } else if(value >= 100) {
+            return "#b95";
+        } else if(value >= 50) {
+            return "#9be";
+        } else if(value >= 30) {
+            return "#5ca";
+        } else if(value >= 20) {
+            return "#b95";
+        } else if(value >= 10) {
+            return "#99c";
+        } else if(value >= 5) {
+            return "#aba";
+        } else {
+            return "#668";
+        }
+    }
+    
+    var scoreTicks = 0;
+    
+    function scoreTick() {
+        var top = parseInt(scoreElement.style.top);
+        if(top >= 0 && scoreTicks < 60) {
+            top -= 2;
+            scoreElement.style.top = top + "px";
+            scoreTicks++;
+        }
+    }
+    
     function tick() {
         for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
             if(flake.className == "flake") {
                 tickFlake(flake);
             }
         }
+        scoreTick();
     }
     
     function collidesWithFace(flake, x, y) {
@@ -52,14 +92,27 @@ function FlakeScene(flakes, flakeElementTemplate, xTongueOff, yTongueOff, tongue
             flakeY > y - tongueHeight && flakeY < y + tongueHeight;
     }
     
+    function updateScore(x, y) {
+        scoreElement.textContent = "* " + score + " *";
+        scoreElement.style.left = x - xScoreOff + "px";
+        scoreElement.style.top = y - yScoreOff + "px";
+        scoreElement.style.color = scoreColor(score);
+        scoreTicks = 0;
+    }
+    
     function catchFlake(x, y) {
+        var killed = 0;
         for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
             if(flake.className == "flake") {
                 if(collidesWithFace(flake, x, y)) {
                     putFlakeOnTop(flake);
-                    //break;
+                    killed++;
                 }
             }
+        }
+        if(killed > 0) {
+            score += killed;
+            updateScore(x, y);
         }
     }
     
@@ -67,8 +120,8 @@ function FlakeScene(flakes, flakeElementTemplate, xTongueOff, yTongueOff, tongue
         catchFlake(e.clientX - xTongueOff, e.clientY - yTongueOff);
     }
     
-    for(var i = 0; i < 20; ++i) {
-        addFlake(intRandom(0, parseInt(flakes.offsetWidth)), 0);
+    for(var i = 0; i < 25; ++i) {
+        addFlake(intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 60));
     }
     
     flakes.addEventListener("mousedown", onMouseDown);
@@ -143,7 +196,8 @@ function onLoad() {
     Face(document.body, face, face1, face2, 104, 128);
     var flakeTemplate = document.getElementById("flake-template");
     var flakes = document.getElementById("flakes");
-    FlakeScene(flakes, flakeTemplate, 30, 35, 50, 30, 32, 32);
+    var score = document.getElementById("score");
+    FlakeScene(flakes, flakeTemplate, score, 30, 35, 50, 30, 32, 32, 50, 60);
     document.body.addEventListener("dragstart", function(e) { e.preventDefault(); });
     document.body.addEventListener("dblclick", function(e) { e.preventDefault(); });
     var time = document.getElementById("time");
