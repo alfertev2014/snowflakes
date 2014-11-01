@@ -120,7 +120,7 @@ function FlakeScene(flakes, flakeElementTemplate, scoreElement, xTongueOff, yTon
         catchFlake(e.clientX - xTongueOff, e.clientY - yTongueOff);
     }
     
-    for(var i = 0; i < 25; ++i) {
+    for(var i = 0; i < 20; ++i) {
         addFlake(intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 60));
     }
     
@@ -158,15 +158,15 @@ function Time(timeElement) {
     function tick() {
         var interval = new Date().getTime() / 1000 - begin;
         var text = "Вы убили ";
-        var hours = Math.floor(interval / 60 / 60);
+        var hours = Math.floor((interval / 60) / 60);
         var minutes = Math.floor(interval / 60) - 60 * hours;
-        var seconds = Math.floor(interval) - 60 * minutes;
+        var seconds = Math.floor(interval) - 60 * minutes - 60 * 60 * hours;
         if(hours > 0) {
             text += hours;
             if(hours % 10 == 0 || hours > 10 && hours < 20)
                 text += " часов ";
             else if(hours % 10 == 1) text += " час ";
-            else if(hours % 10 < 5) text += " часа";
+            else if(hours % 10 < 5) text += " часа ";
             else text += " часов ";
         }
         if(minutes > 0) {

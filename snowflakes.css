@@ -51,3 +51,10 @@ body {
     position: absolute;
     font: normal 35px Tahoma, sans-serif
 }
+
+#moon {
+    display: block;
+    position: fixed;
+    right: 20%;
+    top: 15%;
+}
