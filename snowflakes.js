@@ -3,10 +3,54 @@ function intRandom(begin, end) {
     return Math.ceil((Math.random() * (end - begin))) + begin;
 }
 
-function FlakeScene(flakes, flakeElementTemplate, scoreElement, xTongueOff, yTongueOff, tongueWidth, tongueHeight, xFlakeOff, yFlakeOff, xScoreOff, yScoreOff) {
+function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeOff, xScoreOff, yScoreOff) {
 
     var score = 0;
+    var eyesScore = 0;
+    var faceStopped = false;
+    var scoreTicks = 0;
+    
+    var face = document.getElementById("face");
+    var face1 = document.getElementById("face1");
+    var face2 = document.getElementById("face2");
+    var face3 = document.getElementById("face3");
+    
+    var flakeElementTemplate = document.getElementById("flake-template");
+    var flakes = document.getElementById("flakes");
+    var scoreElement = document.getElementById("score");
+    
+    document.body.addEventListener("mousedown", onFaceMouseDown);
+    document.body.addEventListener("mouseup", onFaceMouseUp);
+    document.body.addEventListener("mousemove", onFaceMouseMove);
+    
+    for(var i = 0; i < 20; ++i) {
+        addFlake(intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 100));
+    }
+    
+    flakes.addEventListener("mousedown", onMouseDown);
+    setInterval(tickFlakes, 50);
 
+    function onFaceMouseMove(e) {
+        if(faceStopped)
+            return;
+        face.style.left = e.clientX - xFaceOff + "px";
+        face.style.top = e.clientY - yFaceOff + "px";
+    }
+    
+    function onFaceMouseDown() {
+        if(faceStopped)
+            return;
+        face1.style.visibility = "hidden";
+        face2.style.visibility = "visible";
+    }
+    
+    function onFaceMouseUp() {
+        if(faceStopped)
+            return;
+        face1.style.visibility = "visible";
+        face2.style.visibility = "hidden";
+    }
+    
     function addFlake(x, y) {
         var newFlake = flakeElementTemplate.cloneNode(true);
         newFlake.style.left = x - xFlakeOff + "px";
@@ -65,94 +109,109 @@ function FlakeScene(flakes, flakeElementTemplate, scoreElement, xTongueOff, yTon
         }
     }
     
-    var scoreTicks = 0;
-    
     function scoreTick() {
         var top = parseInt(scoreElement.style.top);
-        if(top >= 0 && scoreTicks < 60) {
+        if(top >= 0 && scoreTicks < 80) {
             top -= 2;
             scoreElement.style.top = top + "px";
             scoreTicks++;
         }
     }
     
-    function tick() {
+    function faceStop() {
+        faceStopped = true;
+        face1.style.visibility = "hidden";
+        face2.style.visibility = "hidden";
+        face3.style.visibility = "visible";
+    }
+    
+    function faceUnstop() {
+        if(!faceStopped)
+            return;
+        faceStopped = false;
+        face1.style.visibility = "visible";
+        face2.style.visibility = "hidden";
+        face2.style.visibility = "hidden";
+        eyesScore = 0;
+    }
+    
+    function eyesTick(flake) {
+        var x = parseInt(face.style.left) + xFaceOff - eyesArea.xOff;
+        var y = parseInt(face.style.top) + yFaceOff - eyesArea.yOff;
+        if(collidesWithFace(flake, x, y, eyesArea.width, eyesArea.height)) {
+            eyesScore += 4;
+            if(eyesScore > 30) {
+                putFlakeOnTop(flake);
+            }
+            if(eyesScore > 31) {
+                updateScore("! ай !", "#8cf", x, y);
+                faceStop();
+            }
+        }
+    }
+    
+    function tickFlakes() {
         for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
             if(flake.className == "flake") {
                 tickFlake(flake);
+                eyesTick(flake);
             }
+        }
+        if(eyesScore > 0) {
+            eyesScore--;
+        } else {
+            faceUnstop();
         }
         scoreTick();
     }
     
-    function collidesWithFace(flake, x, y) {
+    function collidesWithFace(flake, x, y, areaWidth, areaHeight) {
         var flakeX = parseInt(flake.style.left) + xFlakeOff;
         var flakeY = parseInt(flake.style.top) + yFlakeOff;
-        return flakeX > x - tongueWidth && flakeX < x + tongueWidth &&
-            flakeY > y - tongueHeight && flakeY < y + tongueHeight;
+        return flakeX > x - areaWidth && flakeX < x + areaWidth &&
+            flakeY > y - areaHeight && flakeY < y + areaHeight;
     }
     
-    function updateScore(x, y) {
-        scoreElement.textContent = "* " + score + " *";
+    function updateScore(scoreText, color, x, y) {
+        scoreElement.textContent =  scoreText;
         scoreElement.style.left = x - xScoreOff + "px";
         scoreElement.style.top = y - yScoreOff + "px";
-        scoreElement.style.color = scoreColor(score);
+        scoreElement.style.color = color;
         scoreTicks = 0;
     }
     
-    function catchFlake(x, y) {
+    function killflakes(x, y, areaWidth, areaHeight) {
         var killed = 0;
         for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
             if(flake.className == "flake") {
-                if(collidesWithFace(flake, x, y)) {
+                if(collidesWithFace(flake, x, y, areaWidth, areaHeight)) {
                     putFlakeOnTop(flake);
                     killed++;
                 }
             }
         }
+        return killed;
+    }
+    
+    function catchFlake(x, y) {
+        var killed = killflakes(x, y, tongueArea.width, tongueArea.height);
         if(killed > 0) {
             score += killed;
-            updateScore(x, y);
+            updateScore("* " + score + " *", scoreColor(score), x, y);
         }
     }
     
     function onMouseDown(e) {
-        catchFlake(e.clientX - xTongueOff, e.clientY - yTongueOff);
+        if(faceStopped)
+            return;
+        catchFlake(e.clientX - tongueArea.xOff, e.clientY - tongueArea.yOff);
     }
-    
-    for(var i = 0; i < 20; ++i) {
-        addFlake(intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 60));
-    }
-    
-    flakes.addEventListener("mousedown", onMouseDown);
-    setInterval(tick, 50);
-    
 }
 
-function Face(body, face, face1, face2, xOff, yOff) {
+function Time() {
 
-    function onMouseMove(e) {
-        face.style.left = e.clientX - xOff + "px";
-        face.style.top = e.clientY - yOff + "px";
-    }
+    var timeElement = document.getElementById("time");
     
-    function onMouseDown() {
-        face1.style.visibility = "hidden";
-        face2.style.visibility = "visible";
-    }
-    
-    function onMouseUp() {
-        face1.style.visibility = "visible";
-        face2.style.visibility = "hidden";
-    }
-
-    body.addEventListener("mousedown", onMouseDown);
-    body.addEventListener("mouseup", onMouseUp);
-    body.addEventListener("mousemove", onMouseMove);
-}
-
-function Time(timeElement) {
-
     var begin = new Date().getTime() / 1000;
 
     function tick() {
@@ -190,18 +249,13 @@ function Time(timeElement) {
 }
 
 function onLoad() {
-    var face = document.getElementById("face");
-    var face1 = document.getElementById("face1");
-    var face2 = document.getElementById("face2");
-    Face(document.body, face, face1, face2, 104, 128);
-    var flakeTemplate = document.getElementById("flake-template");
-    var flakes = document.getElementById("flakes");
-    var score = document.getElementById("score");
-    FlakeScene(flakes, flakeTemplate, score, 30, 35, 50, 30, 32, 32, 50, 60);
     document.body.addEventListener("dragstart", function(e) { e.preventDefault(); });
     document.body.addEventListener("dblclick", function(e) { e.preventDefault(); });
-    var time = document.getElementById("time");
-    Time(time);
+        
+    FlakeScene({xOff: 30, yOff: 35, width: 50, height: 30},
+               {xOff: 30, yOff: 80, width: 50, height: 30},
+               104, 128, 32, 32, 50, 60);
+    Time();
 }
 
 window.addEventListener("load", onLoad);
