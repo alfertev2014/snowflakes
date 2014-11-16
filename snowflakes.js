@@ -1,10 +1,20 @@
 
 function intRandom(begin, end) {
-    return Math.ceil((Math.random() * (end - begin))) + begin;
+    return Math.round((Math.random() * (end - begin))) + begin;
 }
 
-function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeOff, xScoreOff, yScoreOff) {
+function FlakeScene() {
 
+    var tongueArea = {xOff: 30, yOff: 35, width: 50, height: 30},
+        eyesArea = {xOff: 30, yOff: 80, width: 50, height: 30},
+        xFaceOff = 104,
+        yFaceOff = 128,
+        xFlakeOff = 32,
+        yFlakeOff = 32,
+        xScoreOff = 50,
+        yScoreOff = 60,
+        snowZoneHeight = 70;
+    
     var score = 0;
     var eyesScore = 0;
     var faceStopped = false;
@@ -18,13 +28,14 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
     var flakeElementTemplate = document.getElementById("flake-template");
     var flakes = document.getElementById("flakes");
     var scoreElement = document.getElementById("score");
+    var snow = document.getElementById("snow");
     
     document.body.addEventListener("mousedown", onFaceMouseDown);
     document.body.addEventListener("mouseup", onFaceMouseUp);
     document.body.addEventListener("mousemove", onFaceMouseMove);
     
-    for(var i = 0; i < 20; ++i) {
-        addFlake(intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 100));
+    for(var i = 0; i < 25; ++i) {
+        addFlake(flakes, intRandom(0, parseInt(flakes.offsetWidth)), intRandom(0, 100));
     }
     
     flakes.addEventListener("mousedown", onMouseDown);
@@ -51,12 +62,12 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
         face2.style.visibility = "hidden";
     }
     
-    function addFlake(x, y) {
+    function addFlake(sceneElement, x, y) {
         var newFlake = flakeElementTemplate.cloneNode(true);
         newFlake.style.left = x - xFlakeOff + "px";
         newFlake.style.top = y - yFlakeOff + "px";
         newFlake.style.display = "block";
-        flakes.appendChild(newFlake);
+        sceneElement.appendChild(newFlake);
     }
     
     function putFlakeOnTop(flake) {
@@ -77,8 +88,16 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
             newLeft = flakes.offsetWidth - xFlakeOff;
         if(newLeft > flakes.offsetWidth - xFlakeOff)
             newLeft = -yFlakeOff;
-        if(newTop > flakes.offsetHeight - yFlakeOff)
-            newTop = -yFlakeOff;
+        if(newTop > flakes.offsetHeight - yFlakeOff - snowZoneHeight) {
+            if(intRandom(0, 100) < 4) {
+                addFlake(snow, newLeft + xFlakeOff, newTop + yFlakeOff);
+                putFlakeOnTop(flake);
+                return;
+            } else if(newTop > flakes.offsetHeight - yFlakeOff) {
+                putFlakeOnTop(flake);
+                return;
+            }
+        }
         flake.style.left = newLeft + "px";
         flake.style.top = newTop + "px";
     }
@@ -144,9 +163,26 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
                 putFlakeOnTop(flake);
             }
             if(eyesScore > 31) {
-                updateScore("! ай !", "#8cf", x, y);
+                updateScore(faceStopped && intRandom(0, 10) < 4 ? "*! 6л@.. !*" : "! ай !", "#8bc", x, y);
                 faceStop();
             }
+        }
+    }
+    
+    function snowTick() {
+        for(var flake = snow.firstChild; flake; ) {
+            if(flake.className == "flake") {
+                var left = parseInt(flake.style.left);
+                var top = parseInt(flake.style.top);
+                if(top > snow.offsetHeight - yFlakeOff || top < snow.offsetHeight - yFlakeOff - snowZoneHeight ||
+                    intRandom(0, 2000) < 1) {
+                    var fl = flake;
+                    flake = flake.nextSibling;
+                    snow.removeChild(fl);
+                    continue;
+                }
+            }
+            flake = flake.nextSibling;
         }
     }
     
@@ -163,6 +199,7 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
             faceUnstop();
         }
         scoreTick();
+        snowTick();
     }
     
     function collidesWithFace(flake, x, y, areaWidth, areaHeight) {
@@ -211,6 +248,7 @@ function FlakeScene(tongueArea, eyesArea, xFaceOff, yFaceOff, xFlakeOff, yFlakeO
 function Time() {
 
     var timeElement = document.getElementById("time");
+    var timeShadow = document.getElementById("time-shadow");
     
     var begin = new Date().getTime() / 1000;
 
@@ -243,6 +281,7 @@ function Time() {
         else if(seconds % 10 < 5) text += " секунды ";
         else text += " секунд ";
         timeElement.textContent = text;
+        timeShadow.textContent = text;
     }
 
     setInterval(tick, 1000);
@@ -252,9 +291,7 @@ function onLoad() {
     document.body.addEventListener("dragstart", function(e) { e.preventDefault(); });
     document.body.addEventListener("dblclick", function(e) { e.preventDefault(); });
         
-    FlakeScene({xOff: 30, yOff: 35, width: 50, height: 30},
-               {xOff: 30, yOff: 80, width: 50, height: 30},
-               104, 128, 32, 32, 50, 60);
+    FlakeScene();
     Time();
 }
 

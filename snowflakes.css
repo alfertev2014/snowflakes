@@ -23,7 +23,7 @@ body {
     visibility: hidden
 }
 
-#flakes {
+#flakes, #snow {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -38,15 +38,23 @@ body {
     top: 0px
 }
 
-#time {
+#time, #time-shadow {
     display: block;
     position: fixed;
     bottom: 0px;
-    color: green;
-    font: italic 25px Verdana, sans-serif
 }
 
-#score {
+#time {
+    font: italic 25px Verdana, sans-serif;
+    color: #0f0;
+}
+
+#time-shadow {
+    font: italic 28px Verdana, sans-serif;
+    color: #604;
+}
+
+#score, #score-shadow {
     display: block;
     position: absolute;
     font: normal 35px Tahoma, sans-serif
