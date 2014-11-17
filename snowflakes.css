@@ -38,20 +38,36 @@ body {
     top: 0px
 }
 
-#time, #time-shadow {
+#time, #time-shadow, #countdown, #countdown-shadow {
     display: block;
     position: fixed;
     bottom: 0px;
+    left: 0px;
+    right: 0px
 }
 
 #time {
-    font: italic 25px Verdana, sans-serif;
+    font: italic 23px Verdana, sans-serif;
     color: #0f0;
 }
 
 #time-shadow {
-    font: italic 28px Verdana, sans-serif;
+    font: italic 25px Verdana, sans-serif;
     color: #604;
+}
+
+#countdown, #countdown-shadow {
+    text-align: right;
+}
+
+#countdown {
+    font: italic 22px Verdana, sans-serif;
+    color: #f0f;
+}
+
+#countdown-shadow {
+    font: italic 28px Verdana, sans-serif;
+    color: #306;
 }
 
 #score, #score-shadow {

@@ -250,14 +250,25 @@ function Time() {
     var timeElement = document.getElementById("time");
     var timeShadow = document.getElementById("time-shadow");
     
+    var countdownElement = document.getElementById("countdown");
+    var countdownShadow = document.getElementById("countdown-shadow");
+    
     var begin = new Date().getTime() / 1000;
 
-    function tick() {
-        var interval = new Date().getTime() / 1000 - begin;
-        var text = "Вы убили ";
-        var hours = Math.floor((interval / 60) / 60);
-        var minutes = Math.floor(interval / 60) - 60 * hours;
-        var seconds = Math.floor(interval) - 60 * minutes - 60 * 60 * hours;
+    function timeToString(interval, nominative) {
+        var text = "";
+        var days = Math.floor((interval / 60) / 60 / 24);
+        var hours = Math.floor((interval / 60) / 60) - days * 24;
+        var minutes = Math.floor(interval / 60) - 60 * hours - days * 60 * 24;
+        var seconds = Math.floor(interval) - 60 * minutes - 60 * 60 * hours - days * 60 * 60 * 24;
+        if(days > 0) {
+            text += days;
+            if(days % 10 == 0 || days > 10 && days < 20)
+                text += " дней ";
+            else if(days % 10 == 1) text += " день ";
+            else if(days % 10 < 5) text += " дня ";
+            else text += " дней ";
+        }
         if(hours > 0) {
             text += hours;
             if(hours % 10 == 0 || hours > 10 && hours < 20)
@@ -270,18 +281,38 @@ function Time() {
             text += minutes;
             if(minutes % 10 == 0 || minutes > 10 && minutes < 20)
                 text += " минут ";
-            else if(minutes % 10 == 1) text += " минуту ";
+            else if(minutes % 10 == 1) text += nominative ? " минута " : " минуту ";
             else if(minutes % 10 < 5) text += " минуты ";
             else text += " минут ";
         }
         text += seconds;
         if(seconds % 10 == 0 || seconds > 10 && seconds < 20)
             text += " секунд";
-        else if(seconds % 10 == 1) text += " секундy ";
+        else if(seconds % 10 == 1) text += nominative ? " секунда " : " секундy ";
         else if(seconds % 10 < 5) text += " секунды ";
         else text += " секунд ";
+        return text;
+    }
+    
+    function killed() {
+        var interval = new Date().getTime() / 1000 - begin;
+        var text = "Вы убили " + timeToString(interval, false);
         timeElement.textContent = text;
         timeShadow.textContent = text;
+    }
+    
+    function remains() {
+        var now = new Date();
+        var newYear = new Date(now.getFullYear() + 1, 0);
+        var interval = newYear.getTime() / 1000 - now.getTime() / 1000;
+        var text = "До Нового года осталось: " + timeToString(interval, true);
+        countdownElement.textContent = text;
+        countdownShadow.textContent = text;
+    }
+    
+    function tick() {
+        killed();
+        remains();
     }
 
     setInterval(tick, 1000);
