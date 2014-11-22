@@ -3,6 +3,10 @@ function intRandom(begin, end) {
     return Math.round((Math.random() * (end - begin))) + begin;
 }
 
+function floatRandom(begin, end) {
+    return (Math.random() * (end - begin)) + begin;
+}
+
 function FlakeScene() {
 
     var tongueArea = {xOff: 30, yOff: 35, width: 50, height: 30},
@@ -27,6 +31,8 @@ function FlakeScene() {
     
     var flakeElementTemplate = document.getElementById("flake-template");
     var flakes = document.getElementById("flakes");
+    var flakeParticles = [];
+    
     var scoreElement = document.getElementById("score");
     var snow = document.getElementById("snow");
     
@@ -62,44 +68,71 @@ function FlakeScene() {
         face2.style.visibility = "hidden";
     }
     
+    function setFlakeLocation(flakeElem, x, y) {
+        flakeElem.style.left = Math.round(x - xFlakeOff) + "px";
+        flakeElem.style.top = Math.round(y - yFlakeOff) + "px";
+    }
+    
+    function updateFlakeElement(flake) {
+        setFlakeLocation(flake.elem, flake.x, flake.y);
+    }
+    
     function addFlake(sceneElement, x, y) {
         var newFlake = flakeElementTemplate.cloneNode(true);
-        newFlake.style.left = x - xFlakeOff + "px";
-        newFlake.style.top = y - yFlakeOff + "px";
         newFlake.style.display = "block";
+        var flake = {x: x, y: y, vx: 0, vy: 0, ax: 0, ay: 0, elem: newFlake};
+        updateFlakeElement(flake);
         sceneElement.appendChild(newFlake);
+        flakeParticles.push(flake);
+    }
+    
+    function addSnowFlake(x, y) {
+        var newFlake = flakeElementTemplate.cloneNode(true);
+        newFlake.style.display = "block";
+        setFlakeLocation(newFlake, x, y);
+        snow.appendChild(newFlake);
     }
     
     function putFlakeOnTop(flake) {
-        flake.style.left = intRandom(0, parseInt(flakes.offsetWidth)) - xFlakeOff + "px";
-        flake.style.top = -yFlakeOff + "px";
+        flake.x = intRandom(0, parseInt(flakes.offsetWidth));
+        flake.y = 0;
+        updateFlakeElement(flake);
     }
     
-    function removeFlake(flake) {
-        flake.parentNode.removeChild(flake);
+    function removeFlake(flakeParticles, i) {
+        var flake = flakeParticles[i];
+        flake.elem.parentNode.removeChild(flake);
+        flakeParticles.splice(i, 1);
     }
 
     function tickFlake(flake) {
-        var oldLeft = parseInt(flake.style.left);
-        var oldTop = parseInt(flake.style.top);
-        var newLeft = oldLeft + intRandom(-4, 4);
-        var newTop = oldTop + intRandom(0, 3);
-        if(newLeft < -xFlakeOff)
-            newLeft = flakes.offsetWidth - xFlakeOff;
-        if(newLeft > flakes.offsetWidth - xFlakeOff)
-            newLeft = -yFlakeOff;
-        if(newTop > flakes.offsetHeight - yFlakeOff - snowZoneHeight) {
+        if(intRandom(0, 10) < 5) {
+            flake.ax = floatRandom(-0.2, 0.2);
+            flake.ay = floatRandom(-0.2, 0.2);
+        }
+        flake.vx += floatRandom(-0.4, 0.4) + flake.ax;
+        flake.vx *= 0.93;
+        flake.vy += floatRandom(-0.4, 0.4) + flake.ay + 0.13;
+        flake.vy *= 0.93;
+        var newX = flake.x + flake.vx;
+        var newY = flake.y + flake.vy;
+        if(newX < 0)
+            newX = flakes.offsetWidth;
+        if(newX > flakes.offsetWidth)
+            newX = 0;
+        if(newY > flakes.offsetHeight - snowZoneHeight) {
             if(intRandom(0, 100) < 4) {
-                addFlake(snow, newLeft + xFlakeOff, newTop + yFlakeOff);
+                addSnowFlake(newX, newY);
                 putFlakeOnTop(flake);
                 return;
-            } else if(newTop > flakes.offsetHeight - yFlakeOff) {
+            } else if(newY > flakes.offsetHeight) {
                 putFlakeOnTop(flake);
                 return;
             }
         }
-        flake.style.left = newLeft + "px";
-        flake.style.top = newTop + "px";
+        flake.x = newX;
+        flake.y = newY;
+        updateFlakeElement(flake);
     }
     
     function scoreColor(value) {
@@ -187,11 +220,10 @@ function FlakeScene() {
     }
     
     function tickFlakes() {
-        for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
-            if(flake.className == "flake") {
-                tickFlake(flake);
-                eyesTick(flake);
-            }
+        for(var i in flakeParticles) {
+            var flake = flakeParticles[i];
+            tickFlake(flake);
+            eyesTick(flake);
         }
         if(eyesScore > 0) {
             eyesScore--;
@@ -203,10 +235,8 @@ function FlakeScene() {
     }
     
     function collidesWithFace(flake, x, y, areaWidth, areaHeight) {
-        var flakeX = parseInt(flake.style.left) + xFlakeOff;
-        var flakeY = parseInt(flake.style.top) + yFlakeOff;
-        return flakeX > x - areaWidth && flakeX < x + areaWidth &&
-            flakeY > y - areaHeight && flakeY < y + areaHeight;
+        return flake.x > x - areaWidth && flake.x < x + areaWidth &&
+            flake.y > y - areaHeight && flake.y < y + areaHeight;
     }
     
     function updateScore(scoreText, color, x, y) {
@@ -219,12 +249,11 @@ function FlakeScene() {
     
     function killflakes(x, y, areaWidth, areaHeight) {
         var killed = 0;
-        for(var flake = flakes.firstChild; flake; flake = flake.nextSibling) {
-            if(flake.className == "flake") {
-                if(collidesWithFace(flake, x, y, areaWidth, areaHeight)) {
-                    putFlakeOnTop(flake);
-                    killed++;
-                }
+        for(var i in flakeParticles) {
+            var flake = flakeParticles[i];
+            if(collidesWithFace(flake, x, y, areaWidth, areaHeight)) {
+                putFlakeOnTop(flake);
+                killed++;
             }
         }
         return killed;
@@ -320,6 +349,7 @@ function Time() {
 
 function onLoad() {
     document.body.addEventListener("dragstart", function(e) { e.preventDefault(); });
+    document.body.addEventListener("selectstart", function(e) { e.preventDefault(); });
     document.body.addEventListener("dblclick", function(e) { e.preventDefault(); });
         
     FlakeScene();
