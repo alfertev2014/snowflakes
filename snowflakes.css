@@ -1,11 +1,11 @@
 
 body {
-    background-color: black;
+    background-color: #000006;
     position: absolute;
     top: 0px;
     left: 0px;
     width: 100%;
-    height: 100%
+    height: 100%;
 }
 
 #face {
@@ -23,7 +23,7 @@ body {
     visibility: hidden
 }
 
-#flakes {
+#flakes, #snow {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -35,19 +35,50 @@ body {
     display: none;
     position: absolute;
     left: 0px;
-    top: 0px
+    top: 0px;
 }
 
-#time {
+#time, #time-shadow, #countdown, #countdown-shadow {
     display: block;
     position: fixed;
     bottom: 0px;
-    color: green;
-    font: italic 25px Verdana, sans-serif
+    left: 0px;
+    right: 0px
 }
 
-#score {
+#time {
+    font: italic 23px Verdana, sans-serif;
+    color: #0f0;
+}
+
+#time-shadow {
+    font: italic 25px Verdana, sans-serif;
+    color: #604;
+}
+
+#countdown, #countdown-shadow {
+    text-align: right;
+}
+
+#countdown {
+    font: italic 21px Verdana, sans-serif;
+    color: #d0f;
+}
+
+#countdown-shadow {
+    font: italic 26px Verdana, sans-serif;
+    color: #306;
+}
+
+#score, #score-shadow {
     display: block;
     position: absolute;
     font: normal 35px Tahoma, sans-serif
+}
+
+#moon {
+    display: block;
+    position: fixed;
+    right: 20%;
+    top: 15%;
 }
